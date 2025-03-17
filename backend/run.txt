@@ -1,0 +1,64 @@
+cd backend
+.\venv\Scripts\activate
+uvicorn app:app --reload
+chainlit run app.py
+
+
+const socket = io("http://localhost:8000/chainlit/ws", {
+  extraHeaders: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`, // Truyền token JWT vào header
+  },
+});
+
+socket.send(
+  JSON.stringify({
+    message: "Hello again!",
+    metadata: { conversation_id: "65f0d39bde5f6b8a2e7b4f01" }, // ID của conversation
+  })
+);
+
+# Testing chainlit
+# @cl.oauth_callback
+# def oauth_callback(provider_id: str, token: str, raw_user_data: Dict[str, str], default_user: cl.User) -> Optional[cl.User]:
+#     if provider_id == "google":
+#         print("Google Login Success")
+#         print(raw_user_data)
+#         default_user.metadata["email"] = raw_user_data["email"]
+#         return default_user
+#     else:
+#         return None
+
+# @cl.header_auth_callback
+# def header_auth_callback(headers: Dict) -> Optional[cl.User]:
+#     token = headers.get("Authorization").split(" ")[1]
+
+#     try:
+#         user_id = verify_jwt(token)
+#         user = users_collection.find_one({"_id": ObjectId(user_id)})
+#         if user:
+#             return cl.User(identifier=user["email"], metadata={"user_id": str(user["_id"]), "role": "user"})
+#     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError):
+#         return None
+
+#     return None
+
+
+
+# Hàm xác thực người dùng
+# @cl.password_auth_callback
+# async def verify_user(email: str, password: str):
+#     user = users_collection.find_one({"email": email})
+#     if user and bcrypt.checkpw(password.encode(), user["password"]):
+#         return cl.User(identifier=email, metadata={"user_id": str(user["_id"])})
+#     return None
+
+origins = [ 
+    "http://localhost:5173", 
+    "http://192.168.90.161:5173" 
+] 
+config.cors = {
+    "allow_origins": origins,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+    "allow_credentials": True
+}

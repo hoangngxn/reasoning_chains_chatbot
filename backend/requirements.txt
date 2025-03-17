@@ -1,0 +1,11 @@
+fastapi
+starlette
+chainlit
+google-generativeai
+python-dotenv
+starlette
+websockets
+pymongo
+bcrypt
+pyjwt
+ollama
