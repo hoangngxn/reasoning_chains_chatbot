@@ -67,7 +67,7 @@ async def register(user: RegisterUser):
 @app.get("/auth/google")
 async def google_login():
     return RedirectResponse(
-        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={REDIRECT_URI}/auth/google/callback&response_type=code&scope=openid%20email%20profile"
+        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={REDIRECT_URI}/auth/google/callback&response_type=code&scope=openid%20email%20profile&prompt=consent"
     )
 
 
@@ -219,35 +219,39 @@ async def get_usage_metadata(request: Request):
 
 
 @app.get("/usage/total")
-async def get_total_usage_by_model(request: Request):
+async def get_total_usage_by_models(request: Request):
     try:
         user_id = get_user_id_from_request(request)
-        model = request.query_params.get("model")  # get model from query parameters
+        models = ["gemini-2.0-flash", "llama3.2:latest"]
 
-        if not model:
-            raise HTTPException(status_code=400, detail="Model parameter is required")
+        data_usage_model = []
 
-        pipeline = [
-            {
-                "$match": {"user_id": user_id, "model": model}
-            },  # filter by user_id and model
-            {
-                "$group": {
-                    "_id": None,
-                    "total_tokens": {
-                        "$sum": {
-                            "$add": ["$prompt_token_count", "$candidates_token_count"]
-                        }
-                    },
-                }
-            },
-        ]
+        for model in models:
+            pipeline = [
+                {
+                    "$match": {"user_id": user_id, "model": model}
+                },  # filter by user_id and model
+                {
+                    "$group": {
+                        "_id": None,
+                        "total_tokens": {
+                            "$sum": {
+                                "$add": [
+                                    "$prompt_token_count",
+                                    "$candidates_token_count",
+                                ]
+                            }
+                        },
+                    }
+                },
+            ]
 
-        result = list(usage_metadata_collection.aggregate(pipeline))
+            result = list(usage_metadata_collection.aggregate(pipeline))
+            total_tokens = result[0]["total_tokens"] if result else 0
 
-        total_tokens = result[0]["total_tokens"] if result else 0
+            data_usage_model.append({"model": model, "token": total_tokens})
 
-        return {"user_id": user_id, "model": model, "total_tokens": total_tokens}
+        return data_usage_model
 
     except HTTPException as http_exc:
         raise http_exc
@@ -294,7 +298,7 @@ async def get_weekly_usage_summary(request: Request):
             raise HTTPException(status_code=401, detail="Unauthorized")
         # last 10 days
         end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=10)
+        start_date = end_date - timedelta(days=9)
         # filter data with 2 models
         pipeline = [
             {
