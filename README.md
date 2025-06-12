@@ -1,5 +1,7 @@
 # Reasoning Chains Chatbot
 
+![Main Page Preview](mainpage.jpg)
+
 Reasoning Chains Chatbot is an AI-powered chatbot designed to answer user queries using structured reasoning chains. The project leverages FastAPI, Chainlit, and MongoDB to provide a robust, interactive, and scalable chatbot solution.
 
 ## Features
